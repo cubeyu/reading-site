@@ -1,6 +1,6 @@
 # 阅读笔记
 
-这是一个使用 `vitepress` 开发的前端开发学习笔记网站。
+这是一个使用 `vitepress` 开发的前端开发学习笔记DOC。
 
 站点网址：[前端知识库](https://haonan0916.github.io/reading-site/ "前端知识库")
 
