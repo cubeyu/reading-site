@@ -977,7 +977,29 @@ var buildTree = function (preorder, inorder) {
     head.right = f(l1 + k - l2 + 1, r1, k + 1, r2);
     return head;
   };
-  return f(0, preorder.length - 1, 0, inorder.length);
+  return f(0, preorder.length - 1, 0, inorder.length - 1);
+};
+```
+
+## 从中序与后序遍历序列构造二叉树
+
+```js
+var buildTree = function (inorder, postorder) {
+  if (!inorder || !postorder || inorder.length !== postorder.length) return null;
+  let map = new Map();
+  for (let i = 0; i < inorder.length; i++) {
+    map.set(inorder[i], i);  
+  }
+  const f = (l1, r1, l2, r2) => {
+    if (l1 > r1) return null;
+    let head = new TreeNode(postorder[r2]);
+    if (l1 === r1) return head;
+    let k = map.get(postorder[r2]);
+    head.left = f(l1, k - 1, l2, l2 + k - l1 - 1);
+    head.right = f(k + 1, r1, l2 + k - l1, r2 - 1);
+    return head;
+  }
+  return f(0, inorder.length - 1, 0, postorder.length - 1);
 };
 ```
 
@@ -1101,6 +1123,61 @@ function getAllPermutationsWithDuplicates(arr) {
 
 console.log(getAllPermutationsWithDuplicates([1, 2, 2]));
 // 输出: [[1,2,2], [2,1,2], [2,2,1]]
+```
+
+## 二叉树的直径
+
+> [!TIP]
+>
+> 思路：`dfs`，求二叉树的直径本质就是求**两个叶子节点之间的最长路径**，因为如果不是叶子节点的话，它还可以往外延申。
+
+```js
+var diameterOfBinaryTree = function (root) {
+    let res = 0;
+    const dfs = (node) => {
+        if (!node) return -1;
+        let leftLength = dfs(node.left) + 1;
+        let rightLength = dfs(node.right) + 1;
+        ans = Math.max(ans, leftLength + rightLength);
+        return Math.max(leftLength, rightLength);
+    }
+    dfs(root);
+    return res;
+}
+```
+
+## 二叉树的层序遍历
+
+> [!TIP]
+>
+> 思路：使用数组模拟队列，在遍历一层节点前，先计算出当前层的总节点数再遍历该层的每个节点。
+>
+> - 如果当前遍历节点有左子树，则让其左节点入队；
+> - 如果当前遍历节点有右子树，则让其右节点入队；
+
+```js
+const MAXN = 2001;
+let queue = Array.from({length: MAXN});
+let l, r;
+var levelOrder = function (root) {
+    let ans = [];
+    if (root) {
+        l = r = 0;
+        queue[r++] = root;
+        while (l < r) {
+            let size = r - l;
+            let list = [];
+            for (let i = 0; i < size; i++) {
+             let cur = queue[l++];
+                list.push(cur.val);
+                if (cur.left) queue[r++] = cur.left;
+                if (cur.right) queue[r++] = cur.right;
+         }
+        }
+        ans.push(list);
+    }
+    return ans;
+}
 ```
 
 # bfs 及其拓展
@@ -1316,6 +1393,70 @@ const minCost = (grid) => {
     }
   }
   return -1;
+};
+```
+
+# 滑动窗口
+
+[长度最小的子数组](https://leetcode.cn/problems/minimum-size-subarray-sum/description/)
+
+```js
+var minSubArrayLen = function (target, nums) {
+  let ans = Number.MAX_VALUE;
+  let sum = 0;
+  for (let l = 0, r = 0; r < nums.length; r++) {
+    sum += nums[r];
+    while (sum - nums[l] >= target) {
+      sum -= nums[l++];
+    }
+    if (sum >= target) {
+      ans = Math.min(ans, r - l + 1);
+    }
+  }
+  return ans === Number.MAX_VALUE ? 0 : ans;
+};
+```
+
+[无重复字符的最长子串](https://leetcode.cn/problems/longest-substring-without-repeating-characters/)
+
+```js
+var lengthOfLongestSubstring = function (s) {
+  let ans = 0;
+  let last = Array.from({length: 256}, () => -1);
+  for (let l = 0, r = 0; r < s.length; r++) {
+    l = Math.max(l, last[s[r].charCodeAt()] + 1);
+    ans = Math.max(ans, r - l + 1);
+    last[s[r].charCodeAt()] = r;
+  }
+  return ans;
+};
+```
+
+[最小覆盖子串](https://leetcode.cn/problems/minimum-window-substring/)
+
+```js
+var minWindow = function (s, t) {
+  let cnts = Array.from({length: 256}, () => 0);
+  for (let i = 0; i < t.length; i++) {
+    cnts[t[i].charCodeAt()]--;
+  }
+  let debt = t.length;
+  let start = 0;
+  for (let l = 0, r = 0; r < s.length; r++) {
+    if (cnts[s[r].charCodeAt()]++ < 0) {
+      debt--;
+    }
+    if (debt === 0) {
+      while (cnts[s[l].charCodeAt()] > 0) {
+        cnts[s[l++].charCodeAt()]--;
+      }
+      if (r - l + 1 < len) {
+        len = r - l + 1;
+        start = l;
+      }
+    }
+  }
+  return len === Number.MAX_VALUE ? "" : s.slice(start, start + len);
 };
 ```
 
@@ -2228,6 +2369,28 @@ public class Code08_DistinctSubsequencesII {
   return (all - 1 + mod) % mod;
  }
 
+}
+```
+
+## 最长递增子序列
+
+[最长递增子序列](https://leetcode.cn/problems/longest-increasing-subsequence/description/?envType=study-plan-v2&envId=top-100-liked)
+
+```js
+var lengthOfLIS = function(nums) {
+  let n = nums.length;
+  let dp = Array.from({length: n}, () => 0);
+  let max = 0;
+  for (let i = 0; i < n; i++) {
+    dp[i] = 1;
+    for (let j = 0; j < i; j++) {
+      if (dp[i] > dp[j]) {
+        dp[i] = Math.max(dp[i], dp[j] + 1);
+      }
+    }
+    max = Math.max(max, dp[i]);
+  }
+  return max;
 }
 ```
 
